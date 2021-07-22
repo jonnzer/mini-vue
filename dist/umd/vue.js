@@ -187,7 +187,11 @@
     observe(data);
   }
 
-  // AST 虚拟dom
+  // 模板字符串：
+  // <div id="app">
+  //  <p>{{name}}</p>
+  // </div>
+  // 此文件的作用是将template的html字符串转成AST结构
   // 需要的正则
   var ncname = "[a-zA-Z_][\\-\\.0-9_a-zA-Z]*"; // abc-aaa
 
@@ -200,11 +204,64 @@
   var endTag = new RegExp("^<\\/".concat(qnameCapture, "[^>]*>")); // 匹配标签结尾的 </div>
 
   var attribute = /^\s*([^\s"'<>\/=]+)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/; // 匹配属性 id="idName"
-  // 模板字符串：
-  // <div id="app">
-  //  <p>{{name}}</p>
-  // </div>
-  //advance(***[0].length) 是regExp.match匹配返回第一个参数 
+
+  var root = null; // ast语法树的树根
+
+  var currentParent; // 标识当前父亲
+
+  var stack = [];
+  var ELEMENT_TYPE = 1; // 
+
+  var TEXT_TYPE = 3; // 
+
+  function createASTElement(tagName, attrs) {
+    return {
+      tag: tagName,
+      type: ELEMENT_TYPE,
+      children: [],
+      attrs: attrs,
+      parent: null
+    };
+  }
+
+  function start(tagName, attrs) {
+    // 记录开始标签 ，并生成AST树
+    var element = createASTElement(tagName, attrs);
+
+    if (!root) {
+      root = element;
+    }
+
+    currentParent = element; // 当前元素标记成父AST树
+
+    stack.push(element);
+  }
+
+  function chars(text) {
+    // 文本是 text
+    text = text.replace(/\s/g, ''); // 替换所有的空格为空
+
+    if (text) {
+      currentParent.children.push({
+        text: text,
+        type: TEXT_TYPE
+      });
+    }
+  }
+
+  function end(tagName) {
+    // 标签闭合 tagName
+    //console.log(
+    var element = stack.pop(); // 拿到栈中的最后一个元素
+
+    currentParent = stack[stack.length - 1]; // 取栈中的最后一个元素 的父级元素
+
+    if (currentParent) {
+      element.parent = currentParent;
+      currentParent.children.push(element);
+    }
+  } //advance(***[0].length) 是regExp.match匹配返回第一个参数 
+
 
   function parserHTML(html) {
     // 解析HTMLDOM文本 => DOM树（包含属性、子节点、父节点）
@@ -220,9 +277,10 @@
           // 'div'
           attrs: []
         };
-        var end, attr;
 
-        while (!(end = html.match(startTagClose)) && (attr = html.match(attribute))) {
+        var _end, attr;
+
+        while (!(_end = html.match(startTagClose)) && (attr = html.match(attribute))) {
           // 如果剩下的匹配不到结束标签，则视为有属性，处理属性值的返回
           advance(attr[0].length); // 将开始标签的属性从模板字符串中删除
 
@@ -232,8 +290,8 @@
           });
         }
 
-        if (end) {
-          advance(end[0].length); // 删除开始标签的>
+        if (_end) {
+          advance(_end[0].length); // 删除开始标签的>
 
           return match; // 这才是真正return到外面的结果
         }
@@ -255,6 +313,7 @@
 
         if (startTagMatch) {
           console.log(startTagMatch);
+          start(startTagMatch.tagName, startTagMatch.attrs);
           continue; // 开始标签匹配完毕后  继续下一次 匹配
         }
 
@@ -262,6 +321,7 @@
 
         if (endTagMatch) {
           advance(endTagMatch[0].length);
+          end(endTagMatch.tagName);
           continue;
         }
       }
@@ -274,13 +334,19 @@
       }
 
       if (text) {
+        chars(text);
         advance(text.length);
       }
     }
+
+    return root;
   }
 
+  // AST 虚拟dom
   function compileToFunction(template) {
-    parserHTML(template);
+    // (1) 解析html字符串 => AST语法树
+    var root = parserHTML(template);
+    console.log(root);
     return function render() {};
   }
 
