@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <div id="app">
+        <p class="abc">{{name}}</p>
+        <p>{{age}}</p>
+    </div>
+    <script src="/dist/umd/vue.js"></script>
+    <script>
+        let vm = new Vue({
+            el: '#app',
+            data() {
+                return {
+                    name: '王泽中是帅比',
+                    age: 28,
+                    address: {
+                        name: 'd***l',
+                        Number: 23
+                    },
+                    testArr: [
+                        {
+                            a: 1,
+                        },
+                        {
+                            b: 2
+                        }
+                    ]
+                }
+            }
+        })
+    </script>
+</body>
+
+</html>
