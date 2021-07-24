@@ -5,7 +5,6 @@ function generate(el) { // el 是AST语法树
     console.log(el);
     let code = `_c("${el.tag}", ${el.attrs.length ? genProps(el.attrs) : undefined // 设置标签属性时 有属性取属性否则取undefined
         })
-
     `
     return code
 }

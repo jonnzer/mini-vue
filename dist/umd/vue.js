@@ -348,7 +348,7 @@
     // el 是AST语法树
     console.log(el);
     var code = "_c(\"".concat(el.tag, "\", ").concat(el.attrs.length ? genProps(el.attrs) : undefined // 设置标签属性时 有属性取属性否则取undefined
-    , ")\n\n    ");
+    , ")\n    ");
     return code;
   }
 
