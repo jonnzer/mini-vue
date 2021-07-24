@@ -209,7 +209,8 @@
 
   var currentParent; // 标识当前父亲
 
-  var stack = [];
+  var stack = []; // 标签字符串数组
+
   var ELEMENT_TYPE = 1; // 
 
   var TEXT_TYPE = 3; // 
@@ -312,7 +313,6 @@
         var startTagMatch = parsestartTag(); // startTagMatch 包含tagName attrs
 
         if (startTagMatch) {
-          console.log(startTagMatch);
           start(startTagMatch.tagName, startTagMatch.attrs);
           continue; // 开始标签匹配完毕后  继续下一次 匹配
         }
@@ -343,10 +343,44 @@
   }
 
   // AST 虚拟dom
+
+  function generate(el) {
+    // el 是AST语法树
+    console.log(el);
+    var code = "_c(\"".concat(el.tag, "\", ").concat(el.attrs.length ? genProps(el.attrs) : undefined // 设置标签属性时 有属性取属性否则取undefined
+    , ")\n\n    ");
+    return code;
+  }
+
+  function genProps(attrs) {
+    // 生成属性  attrs:[{name: id, value: '**'}] => 多个{id: **}
+    var str = '';
+    attrs.forEach(function (item) {
+      if (item.name === 'style') {
+        var obj = {};
+        item.value.split(';').forEach(function (styleItem) {
+          if (styleItem) {
+            var splitItem = styleItem.split(':');
+            obj[splitItem[0]] = splitItem[1];
+          }
+        });
+        str += "{style: ".concat(JSON.stringify(obj), "}");
+      } else {
+        str += "{".concat(item.name, ":").concat(item.value, "},");
+      }
+    });
+    return str.substring(0, str.length - 1);
+  }
+
   function compileToFunction(template) {
     // (1) 解析html字符串 => AST语法树
-    var root = parserHTML(template);
-    console.log(root);
+    var root = parserHTML(template); // AST语法树 => render函数
+    // 原理：模版引擎？？？
+    // html字符串： <div id="app"><p>hello {{name}}</p> test</div>
+    // render函数： _c("div", {id: app}, _c("p", undefined, _v('hello' + _s(name))), _v('hello'))
+
+    var code = generate(root);
+    console.log(code);
     return function render() {};
   }
 

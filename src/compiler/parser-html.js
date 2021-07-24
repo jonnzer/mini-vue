@@ -16,7 +16,7 @@ const defaultTagRE = /\{\{((?:.|\r?\n)+?)\}\}/g         // {{ddd}}
 
 let root = null // ast语法树的树根
 let currentParent // 标识当前父亲
-let stack = []
+let stack = [] // 标签字符串数组
 const ELEMENT_TYPE = 1 // 
 const TEXT_TYPE = 3 // 
 
@@ -93,7 +93,6 @@ export function parserHTML(html) { // 解析HTMLDOM文本 => DOM树（包含属�
         if (textEnd === 0) { // 是标签的左边 包含开始标签 和结束标签
             let startTagMatch = parsestartTag() // startTagMatch 包含tagName attrs
             if (startTagMatch) {
-                console.log(startTagMatch);
                 start(startTagMatch.tagName, startTagMatch.attrs)
                 continue // 开始标签匹配完毕后  继续下一次 匹配
             }
