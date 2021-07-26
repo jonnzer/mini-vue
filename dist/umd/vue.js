@@ -343,13 +343,64 @@
   }
 
   // AST 虚拟dom
+  var defaultTagRE = /\{\{((?:.|\r?\n)+?)\}\}/g; // {{ddd}} 
 
   function generate(el) {
     // el 是AST语法树
     console.log(el);
-    var code = "_c(\"".concat(el.tag, "\", ").concat(el.attrs.length ? genProps(el.attrs) : undefined // 设置标签属性时 有属性取属性否则取undefined
-    , ")\n    ");
+    var children = genChildren(el);
+    var code = "_c(\"".concat(el.tag, "\",\n        ").concat(el.attrs.length ? genProps(el.attrs) : undefined // 设置标签属性时 有属性取属性否则取undefined
+    , "\n        ").concat(children ? ",".concat(children) : '', ")\n    ");
     return code;
+  }
+
+  function genChildren(el) {
+    // 生成孩子 el.chilren 是可以使用的
+    var children = el.children;
+
+    if (children && children.length) {
+      return "".concat(children.map(function (c) {
+        return gen(c);
+      }).join(','));
+    } else {
+      return false;
+    }
+  }
+
+  function gen(node) {
+    // node type 1 3 区别是元素节点还是文本节点 递归思想
+    if (node.type === 1) {
+      return generate(node);
+    } else {
+      var text = node.text; // 到这一步仍需处理text 可能存在{{}}语法
+      // a {{name}} b {{age}} c 
+      // 转化成
+      // _v("a" + _S(name) + "b" + _s(age) + "c")
+      // 正则存在lastIndex的问题，需重置为0 ？？？
+      // 正则 exec 0: "{{name}}" 1: "name" index匹配文本的第一个字符的位置
+
+      var tokens = []; // 待拼接的字符串数组
+
+      var match, index;
+      var lastIndex = defaultTagRE.lastIndex = 0;
+
+      while (match = defaultTagRE.exec(text)) {
+        index = match.index;
+
+        if (index > lastIndex) {
+          tokens.push(JSON.stringify(text.slice(lastIndex, index)));
+        }
+
+        tokens.push("_s(".concat(match[1].trim(), ")"));
+        lastIndex = index + match[0].length;
+      }
+
+      if (lastIndex < text.length) {
+        tokens.push(JSON.stringify(text.slice(lastIndex)));
+      }
+
+      return "_v(".concat(tokens.join('+'), ")");
+    }
   }
 
   function genProps(attrs) {
@@ -364,7 +415,7 @@
             obj[splitItem[0]] = splitItem[1];
           }
         });
-        str += "{style: ".concat(JSON.stringify(obj), "}");
+        str += "{style: ".concat(JSON.stringify(obj), "},");
       } else {
         str += "{".concat(item.name, ":").concat(item.value, "},");
       }
@@ -379,9 +430,11 @@
     // html字符串： <div id="app"><p>hello {{name}}</p> test</div>
     // render函数： _c("div", {id: app}, _c("p", undefined, _v('hello' + _s(name))), _v('hello'))
 
-    var code = generate(root);
-    console.log(code);
-    return function render() {};
+    var code = generate(root); // 所有的模板引擎的实现 底层原理  new Function () {}  with
+
+    var renderFn = new Function("with(this){ return ".concat(code, "}"));
+    console.log(renderFn);
+    return renderFn;
   }
 
   function initMixin(Vue) {
