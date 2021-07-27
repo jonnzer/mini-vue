@@ -1,5 +1,8 @@
+console.log('init.js');
+
 import { initState } from "./state"
 import { compileToFunction } from './compiler/index'
+import { mountComponent } from "./lifecycle"
 
 export function initMixin(Vue) {
     // vue 原型添加一个init方法
@@ -32,6 +35,9 @@ export function initMixin(Vue) {
             const render = compileToFunction(template)
             options.render = render
         }
+
+        // 拿到render函数后 可以渲染当前组件
+        mountComponent(vm, el)
 
     }
 }

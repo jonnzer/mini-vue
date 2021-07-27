@@ -54,6 +54,17 @@
       value: value
     });
   }
+  function proxy(vm, source, key) {
+    // 数据访问代理
+    Object.defineProperty(vm, key, {
+      get: function get() {
+        return vm[source][key];
+      },
+      set: function set(newVal) {
+        vm[source][key] = newVal;
+      }
+    });
+  }
 
   // 重新数组的常用API
   // push shfit unshift pop reverse sort splice 会导致数组本身产生变化的API都要处理
@@ -183,6 +194,11 @@
     // 数据初始化工作
     var data = vm.$options.data;
     data = vm._data = typeof data === 'function' ? data.call(vm) : data; // MVVM 数据劫持 数据驱动视图更新 vue2.0是Object.defineProperty getter setter vue3 proxy
+    // vm.data.*** => vm.*** 取数据方便
+
+    for (var key in data) {
+      proxy(vm, '_data', key);
+    }
 
     observe(data);
   }
@@ -347,7 +363,6 @@
 
   function generate(el) {
     // el 是AST语法树
-    console.log(el);
     var children = genChildren(el);
     var code = "_c(\"".concat(el.tag, "\",\n        ").concat(el.attrs.length ? genProps(el.attrs) : undefined // 设置标签属性时 有属性取属性否则取undefined
     , "\n        ").concat(children ? ",".concat(children) : '', ")\n    ");
@@ -432,11 +447,61 @@
 
     var code = generate(root); // 所有的模板引擎的实现 底层原理  new Function () {}  with
 
-    var renderFn = new Function("with(this){ return ".concat(code, "}"));
-    console.log(renderFn);
+    var renderFn = new Function("with(this){ return ".concat(code, "}")); // renderFn返回的是虚拟dom
+
     return renderFn;
   }
 
+  var Watcher = /*#__PURE__*/function () {
+    function Watcher(vm, exprOrFn, callback, options) {
+      _classCallCheck(this, Watcher);
+
+      // 所有属性都放在实例上
+      this.vm = vm;
+      this.callback = callback;
+      this.options = options;
+      this.getter = exprOrFn;
+      this.get();
+    }
+
+    _createClass(Watcher, [{
+      key: "get",
+      value: function get() {
+        this.getter(); // 执行 exprOrFn
+      }
+    }]);
+
+    return Watcher;
+  }();
+
+  // 生命周期
+  // render函数生成的dom替换el
+  console.log('lifecycleMixin.js');
+
+  function lifecycleMixin(Vue) {
+    Vue.prototype._update = function (vnode) {
+      console.log('vm._update');
+    };
+  }
+  function mountComponent(vm, el) {
+    vm.$options;
+    vm.$el = el; // $el用来存放真实dom
+    // 渲染页面 渲染或更新都会调用
+
+    var updateComponent = function updateComponent() {
+      // Watcher就是用来渲染的 ??? 还有绑定监听
+      // vm._render 通过解析的render方法，渲染出虚拟dom _c _v _s
+      // vm._update 通过虚拟dom 创建真实的dom
+      // 渲染页面
+      vm._update(vm._render()); // 执行顺序是先里后外
+
+    }; // 渲染watcher 每个组件都有一个watcher vm.$watch(() => {} )   空函数是watch后的回调处理
+
+
+    new Watcher(vm, updateComponent, function () {}, true);
+  }
+
+  console.log('init.js');
   function initMixin(Vue) {
     // vue 原型添加一个init方法
     Vue.prototype._init = function (options) {
@@ -467,7 +532,17 @@
 
         var render = compileToFunction(template);
         options.render = render;
-      }
+      } // 拿到render函数后 可以渲染当前组件
+
+
+      mountComponent(vm, el);
+    };
+  }
+
+  console.log('renderMixin.js');
+  function renderMixin(Vue) {
+    Vue.prototype._render = function () {
+      console.log('vm._render');
     };
   }
 
@@ -477,6 +552,8 @@
   }
 
   initMixin(Vue);
+  renderMixin(Vue);
+  lifecycleMixin(Vue);
 
   return Vue;
 

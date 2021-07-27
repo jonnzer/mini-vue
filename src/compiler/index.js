@@ -3,8 +3,6 @@ import { parserHTML } from "./parser-html"
 const defaultTagRE = /\{\{((?:.|\r?\n)+?)\}\}/g         // {{ddd}} 
 
 function generate(el) { // el 是AST语法树
-    console.log(el);
-
     let children = genChildren(el)
     let code = `_c("${el.tag}",
         ${el.attrs.length ? genProps(el.attrs) : undefined // 设置标签属性时 有属性取属性否则取undefined
@@ -86,6 +84,7 @@ export function compileToFunction(template) {
     // 所有的模板引擎的实现 底层原理  new Function () {}  with
 
     let renderFn = new Function(`with(this){ return ${code}}`)
-    console.log(renderFn)
+
+    // renderFn返回的是虚拟dom
     return renderFn
 }
