@@ -63,12 +63,13 @@ function genProps(attrs) { // 生成属性  attrs:[{name: id, value: '**'}] => �
                     obj[splitItem[0]] = splitItem[1]
                 }
             })
-            str += `{style: ${JSON.stringify(obj)}},`
+            str += `style: ${JSON.stringify(obj)},`
         } else {
-            str += `{${item.name}:${item.value}},`
+            str += `${item.name}:${JSON.stringify(item.value)},`
         }
     })
-    return str.substring(0, str.length - 1)
+    //return `{${str.substring(0, str.length - 1)}}`
+    return `{${str.slice(0, -1)}}`
 }
 
 export function compileToFunction(template) {

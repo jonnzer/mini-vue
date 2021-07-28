@@ -1,5 +1,3 @@
-console.log('init.js');
-
 import { initState } from "./state"
 import { compileToFunction } from './compiler/index'
 import { mountComponent } from "./lifecycle"

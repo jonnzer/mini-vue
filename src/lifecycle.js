@@ -1,6 +1,5 @@
 // 生命周期
 // render函数生成的dom替换el
-console.log('lifecycleMixin.js');
 
 
 import Watcher from "./observer/watcher";
@@ -10,7 +9,7 @@ import Watcher from "./observer/watcher";
 // 定义vm._update
 export function lifecycleMixin(Vue) {
     Vue.prototype._update = function (vnode) {
-        console.log('vm._update');
+        console.log(vnode);
     }
 }
 
