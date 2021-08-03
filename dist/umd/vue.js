@@ -475,11 +475,73 @@
     return Watcher;
   }();
 
+  function patch(oldVnode, vnode) {
+    // 第一次oldVnode 是标签
+    console.log(oldVnode, vnode); // 1 判断是更新还是渲染
+
+    var isRealElement = oldVnode.nodeType;
+
+    if (isRealElement) {
+      var oldElm = oldVnode;
+      var parentElm = oldElm.parentNode; // 获取父级节点是为了提前存好插入的位置
+
+      var el = createElm(vnode);
+      parentElm.insertBefore(el, oldElm.nextSibling);
+      parentElm.removeChild(oldElm);
+    }
+  }
+
+  function createElm(vnode) {
+    //return document.createElement('div')
+    var tag = vnode.tag,
+        children = vnode.children;
+        vnode.key;
+        vnode.data;
+        var text = vnode.text; // 是标签或创建标签
+    // 标签
+
+    if (typeof tag === 'string') {
+      vnode.el = document.createElement(tag);
+      updateProperties(vnode);
+      children.forEach(function (child) {
+        // 递归创建儿子节点
+        return vnode.el.appendChild(createElm(child));
+      });
+    } else {
+      // 文本    
+      vnode.el = document.createTextNode(text);
+    }
+
+    return vnode.el;
+  }
+
+  function updateProperties(vnode) {
+    // 更新属性
+    var newProps = vnode.data || {};
+    var el = vnode.el;
+
+    for (var key in newProps) {
+      console.log(key);
+
+      if (key === 'style') {
+        for (var styleName in newProps.style) {
+          el.style[styleName] = newProps.style[styleName];
+        }
+      } else if (key === 'class') {
+        el.className = newProps["class"];
+      } else {
+        el.setAttribute(key, newProps[key]);
+      }
+    }
+  }
+
   // 生命周期
 
   function lifecycleMixin(Vue) {
     Vue.prototype._update = function (vnode) {
+      var vm = this;
       console.log(vnode);
+      vm.$el = patch(vm.$el, vnode); // 虚拟vnode创建真实dom 替换已有的$el
     };
   }
   function mountComponent(vm, el) {

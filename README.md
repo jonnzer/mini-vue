@@ -12,8 +12,10 @@
 ### 零碎知识点 
 + rollup-c 使用当前的rollup config文件打包
 + rollup -c -w 实时打包 -w 就是watch的意思
-+ AST语法树 是用对象来描述JS原生语法
-+ 虚拟dom 是用对象来描述dom节点
++ AST语法树 是用对象来描述JS原生语法 解析前
++ 虚拟dom 是用对象来描述dom节点 解析后
++ Node.insertBefore() 方法在参考节点之前插入一个拥有指定父节点的子节点 eg: var insertedNode = parentNode.insertBefore(newNode, referenceNode);
+
 
 ### 代码写法
 + 初始化的功能，也会把用到的传入对象信息和初始化状态 等等方法都分成一个一个小函数。（分治的思想）
