@@ -10,6 +10,7 @@ export function patch(oldVnode, vnode) {
         let el = createElm(vnode)
         parentElm.insertBefore(el, oldElm.nextSibling)
         parentElm.removeChild(oldElm)
+        return el
     }
 }
 
@@ -40,7 +41,6 @@ function updateProperties(vnode) { // 更新属性
     let newProps = vnode.data || {}
     let el = vnode.el
     for (let key in newProps) {
-        console.log(key);
         if (key === 'style') {
             for (let styleName in newProps.style) {
                 el.style[styleName] = newProps.style[styleName]

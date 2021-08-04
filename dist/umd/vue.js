@@ -4,6 +4,44 @@
   (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.Vue = factory());
 }(this, (function () { 'use strict';
 
+  function ownKeys(object, enumerableOnly) {
+    var keys = Object.keys(object);
+
+    if (Object.getOwnPropertySymbols) {
+      var symbols = Object.getOwnPropertySymbols(object);
+
+      if (enumerableOnly) {
+        symbols = symbols.filter(function (sym) {
+          return Object.getOwnPropertyDescriptor(object, sym).enumerable;
+        });
+      }
+
+      keys.push.apply(keys, symbols);
+    }
+
+    return keys;
+  }
+
+  function _objectSpread2(target) {
+    for (var i = 1; i < arguments.length; i++) {
+      var source = arguments[i] != null ? arguments[i] : {};
+
+      if (i % 2) {
+        ownKeys(Object(source), true).forEach(function (key) {
+          _defineProperty(target, key, source[key]);
+        });
+      } else if (Object.getOwnPropertyDescriptors) {
+        Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));
+      } else {
+        ownKeys(Object(source)).forEach(function (key) {
+          Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
+        });
+      }
+    }
+
+    return target;
+  }
+
   function _typeof(obj) {
     "@babel/helpers - typeof";
 
@@ -42,6 +80,21 @@
     return Constructor;
   }
 
+  function _defineProperty(obj, key, value) {
+    if (key in obj) {
+      Object.defineProperty(obj, key, {
+        value: value,
+        enumerable: true,
+        configurable: true,
+        writable: true
+      });
+    } else {
+      obj[key] = value;
+    }
+
+    return obj;
+  }
+
   // 判断传参是否为对象
   function isObject(data) {
     return _typeof(data) === 'object' && data !== null;
@@ -64,6 +117,53 @@
         vm[source][key] = newVal;
       }
     });
+  }
+  var LIFECYCLE_HOOKS = [// 生命周期名字
+  'beforeCreate', 'created', 'beforeMount', 'mounted', 'beforeUpdate', 'updated', 'beforeDestroy', 'destroyed'];
+  var strats = {};
+  LIFECYCLE_HOOKS.forEach(function (hook) {
+    strats[hook] = mergeHook;
+  });
+
+  function mergeHook(oldVal, newVal) {
+    if (newVal) {
+      if (oldVal) {
+        return oldVal.concat(newVal);
+      } else {
+        return [newVal];
+      }
+    }
+  } // 默认的合并规则 特殊属性有其他合并方式
+
+
+  function mergeOptions(oldOpt, newOpt) {
+    var options = {};
+
+    for (var key in oldOpt) {
+      mergeField(key);
+    }
+
+    for (var _key in newOpt) {
+      if (!oldOpt.hasOwnProperty(_key)) {
+        mergeField(_key);
+      }
+    }
+
+    function mergeField(key) {
+      if (strats[key]) {
+        return options[key] = strats[key](oldOpt[key], newOpt[key]); // ?
+      }
+
+      if (_typeof(oldOpt[key]) === 'object' && _typeof(newOpt[key]) === 'object') {
+        options[key] = _objectSpread2(_objectSpread2({}, oldOpt[key]), newOpt[key]);
+      } else if (newOpt[key] === null || newOpt[key] === undefined) {
+        options[key] = oldOpt[key];
+      } else {
+        options[key] = newOpt[key];
+      }
+    }
+
+    return options;
   }
 
   // 重新数组的常用API
@@ -150,6 +250,8 @@
   function defineReactive(data, key, value) {
     observe(value);
     Object.defineProperty(data, key, {
+      configurable: true,
+      enumerable: true,
       get: function get() {
         return value;
       },
@@ -358,7 +460,6 @@
     return root;
   }
 
-  // AST 虚拟dom
   var defaultTagRE = /\{\{((?:.|\r?\n)+?)\}\}/g; // {{ddd}} 
 
   function generate(el) {
@@ -439,6 +540,7 @@
     return "{".concat(str.slice(0, -1), "}");
   }
 
+  // AST 虚拟dom
   function compileToFunction(template) {
     // (1) 解析html字符串 => AST语法树
     var root = parserHTML(template); // AST语法树 => render函数
@@ -488,6 +590,7 @@
       var el = createElm(vnode);
       parentElm.insertBefore(el, oldElm.nextSibling);
       parentElm.removeChild(oldElm);
+      return el;
     }
   }
 
@@ -521,8 +624,6 @@
     var el = vnode.el;
 
     for (var key in newProps) {
-      console.log(key);
-
       if (key === 'style') {
         for (var styleName in newProps.style) {
           el.style[styleName] = newProps.style[styleName];
@@ -547,7 +648,8 @@
   function mountComponent(vm, el) {
     vm.$options;
     vm.$el = el; // $el用来存放真实dom
-    // 渲染页面 渲染或更新都会调用
+
+    callHook(vm, 'beforeMount'); // 渲染页面 渲染或更新都会调用
 
     var updateComponent = function updateComponent() {
       // Watcher就是用来渲染的 ??? 还有绑定监听
@@ -560,17 +662,30 @@
 
 
     new Watcher(vm, updateComponent, function () {}, true);
+    callHook(vm, 'mounted');
+  }
+  function callHook(vm, hook) {
+    var handlers = vm.$options[hook];
+
+    if (handlers) {
+      for (var i = 0; i < handlers.length; i++) {
+        handlers[i].call(vm);
+      }
+    }
   }
 
   function initMixin(Vue) {
     // vue 原型添加一个init方法
     Vue.prototype._init = function (options) {
       // 数据劫持
-      var vm = this;
-      vm.$options = options; // vue中的this.$options等于 用户传入的属性
+      var vm = this; // 子类 继承 用户传递和全局进行合并
 
+      vm.$options = mergeOptions(vm.constructor.options, options); // vue中的this.$options等于 用户传入的属性
+
+      callHook(vm, 'beforeCreate');
       initState(vm); // 初始化状态
-      // 如果有el的参数，就渲染到节点上 template render
+
+      callHook(vm, 'created'); // 如果有el的参数，就渲染到节点上 template render
 
       if (vm.$options.el) {
         vm.$mount(vm.$options.el);
@@ -660,6 +775,30 @@
     };
   }
 
+  function initGlobalApi(Vue) {
+    Vue.options = {};
+
+    Vue.mixin = function (mixin) {
+      this.options = mergeOptions(this.options, mixin);
+    };
+
+    Vue.mixin({
+      a: 1,
+      b: 2,
+      beforeCreate: function beforeCreate() {
+        console.log('fn1');
+      }
+    });
+    Vue.mixin({
+      b: 3,
+      c: 4,
+      beforeCreate: function beforeCreate() {
+        console.log('fn2');
+      }
+    });
+    console.log(Vue.options);
+  }
+
   function Vue(options) {
     // vue的初始化操作
     this._init(options);
@@ -668,6 +807,7 @@
   initMixin(Vue);
   renderMixin(Vue);
   lifecycleMixin(Vue);
+  initGlobalApi(Vue);
 
   return Vue;
 

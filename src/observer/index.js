@@ -39,6 +39,8 @@ class Observer {
 function defineReactive(data, key, value) {
     observe(value)
     Object.defineProperty(data, key, {
+        configurable: true,
+        enumerable: true,
         get() {
             return value
         },

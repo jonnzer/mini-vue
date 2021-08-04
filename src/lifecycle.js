@@ -19,6 +19,8 @@ export function mountComponent(vm, el) {
     const options = vm.$options
     vm.$el = el // $el用来存放真实dom
 
+    callHook(vm, 'beforeMount')
+
     // 渲染页面 渲染或更新都会调用
     let updateComponent = () => {
         // Watcher就是用来渲染的 ??? 还有绑定监听
@@ -27,8 +29,18 @@ export function mountComponent(vm, el) {
 
         // 渲染页面
         vm._update(vm._render()) // 执行顺序是先里后外
+
     }
     // 渲染watcher 每个组件都有一个watcher vm.$watch(() => {} )   空函数是watch后的回调处理
     new Watcher(vm, updateComponent, () => { }, true)
+    callHook(vm, 'mounted')
+}
 
+export function callHook(vm, hook) {
+    const handlers = vm.$options[hook]
+    if (handlers) {
+        for (let i = 0; i < handlers.length; i++) {
+            handlers[i].call(vm)
+        }
+    }
 }
