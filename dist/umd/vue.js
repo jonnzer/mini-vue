@@ -201,6 +201,45 @@
     };
   });
 
+  var id$1 = 0;
+
+  var Dep = /*#__PURE__*/function () {
+    function Dep() {
+      _classCallCheck(this, Dep);
+
+      this.id = id$1++;
+      this.subs = [];
+    }
+
+    _createClass(Dep, [{
+      key: "depend",
+      value: function depend() {
+        this.subs.push(Dep.target);
+        console.log(this.subs);
+      }
+    }, {
+      key: "notify",
+      value: function notify() {
+        this.subs.forEach(function (watcher) {
+          watcher.update();
+        });
+      }
+    }]);
+
+    return Dep;
+  }();
+
+  var stack$1 = []; // 保留和移除watcher
+
+  function pushTarget(watcher) {
+    Dep.target = watcher;
+    stack$1.push(Dep.target);
+  }
+  function popTarget() {
+    stack$1.pop();
+    Dep.target = stack$1[stack$1.length - 1];
+  }
+
   // 当值是数组的时候，索引也会作为key去监听 get 0() get 1()这样是无意义的操作，也会拖慢性能
 
   var Observer = /*#__PURE__*/function () {
@@ -248,11 +287,18 @@
   }();
 
   function defineReactive(data, key, value) {
+    var dep = new Dep();
     observe(value);
     Object.defineProperty(data, key, {
       configurable: true,
       enumerable: true,
       get: function get() {
+        // 这里可以设置watcher ，每个属性都有对应自己的watcher
+        if (Dep.target) {
+          // 如果当前有watcher
+          dep.depend();
+        }
+
         return value;
       },
       set: function set(newVal) {
@@ -263,6 +309,7 @@
 
         observe(newVal);
         value = newVal;
+        dep.notify(); // 通知依赖的watcher进行更新
       }
     });
   }
@@ -555,6 +602,8 @@
     return renderFn;
   }
 
+  var id = 0;
+
   var Watcher = /*#__PURE__*/function () {
     function Watcher(vm, exprOrFn, callback, options) {
       _classCallCheck(this, Watcher);
@@ -563,6 +612,7 @@
       this.vm = vm;
       this.callback = callback;
       this.options = options;
+      this.id = id++;
       this.getter = exprOrFn;
       this.get();
     }
@@ -570,7 +620,17 @@
     _createClass(Watcher, [{
       key: "get",
       value: function get() {
+        // 不直接调用 exprOrFn 的原因是，调用的基础上，还有额外的操作 存储和移除watcher
+        pushTarget(this); // water存起来， Dep.target
+
         this.getter(); // 执行 exprOrFn
+
+        popTarget(); // 移除全局watcher Dep.target
+      }
+    }, {
+      key: "update",
+      value: function update() {
+        this.get();
       }
     }]);
 

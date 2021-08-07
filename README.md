@@ -16,6 +16,9 @@
 + 虚拟dom 是用对象来描述dom节点 解析后
 + Node.insertBefore() 方法在参考节点之前插入一个拥有指定父节点的子节点 eg: var insertedNode = parentNode.insertBefore(newNode, referenceNode);
 
+### 大知识点：
++ watcher交互：
+- 先存放Dep.target,在set值时通知所有依赖该值的属性更新
 
 ### 代码写法
 + 初始化的功能，也会把用到的传入对象信息和初始化状态 等等方法都分成一个一个小函数。（分治的思想）
@@ -30,3 +33,4 @@
 
 ### 感想
 + 写一个不错的函数，要先考虑自己想输出什么结果
+

@@ -1,5 +1,7 @@
 import { isObject, def } from "../util/index.js"
 import { arrayMethods } from './array.js'
+import Dep from './dep'
+
 
 // 要承载比较多的方法
 // 当值是数组的时候，索引也会作为key去监听 get 0() get 1()这样是无意义的操作，也会拖慢性能
@@ -37,11 +39,16 @@ class Observer {
 }
 
 function defineReactive(data, key, value) {
+    let dep = new Dep()
     observe(value)
     Object.defineProperty(data, key, {
         configurable: true,
         enumerable: true,
         get() {
+            // 这里可以设置watcher ，每个属性都有对应自己的watcher
+            if (Dep.target) { // 如果当前有watcher
+                dep.depend()
+            }
             return value
         },
         set(newVal) {
@@ -49,6 +56,7 @@ function defineReactive(data, key, value) {
             // 如果用户手动设置更新了data的对象，那么也要给新对象上的数据进行数据劫持
             observe(newVal)
             value = newVal
+            dep.notify() // 通知依赖的watcher进行更新
         }
     })
 }
