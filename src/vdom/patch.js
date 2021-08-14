@@ -1,7 +1,5 @@
 export function patch(oldVnode, vnode) {
     // 第一次oldVnode 是标签
-    console.log(oldVnode, vnode);
-
     // 1 判断是更新还是渲染
     const isRealElement = oldVnode.nodeType
     if (isRealElement) {

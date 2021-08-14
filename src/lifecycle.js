@@ -10,7 +10,6 @@ import { patch } from './vdom/patch'
 export function lifecycleMixin(Vue) {
     Vue.prototype._update = function (vnode) {
         const vm = this
-        console.log(vnode);
         vm.$el = patch(vm.$el, vnode) // 虚拟vnode创建真实dom 替换已有的$el
     }
 }

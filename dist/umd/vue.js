@@ -197,6 +197,8 @@
 
       if (inserted) ob.observerArray(inserted); // 观察新插入的对象
 
+      ob.dep.notify(); // 数组dep更新
+
       return result;
     };
   });
@@ -253,9 +255,11 @@
     function Observer(value) {
       _classCallCheck(this, Observer);
 
-      // 把new Observer(data)存放在每一个被监控的对象里 方便复写的数组API能调用观察者的方法
+      // 为了给数组也添加观察者
+      this.dep = new Dep(); // 把new Observer(data)存放在每一个被监控的对象里 方便复写的数组API能调用观察者的方法
       // value.__ob__ = this 这是错误的写法，因为定义的__ob__也是一个对象，会造成无限生成__ob__,并无限观察它。解决方法是
       // Object.defineProperty 不可枚举 不可复写 已封装到def里
+
       def(value, '__ob__', this);
 
       if (Array.isArray(value)) {
@@ -295,19 +299,29 @@
 
   function defineReactive(data, key, value) {
     // 定义响应式数据 让对象的数据添加getter和setter 并在期间设置了观察者
+    console.log(value);
     var dep = new Dep();
-    observe(value);
+    var childObj = observe(value); // value可能是数组，也可能是对象
+
     Object.defineProperty(data, key, {
       configurable: true,
       enumerable: true,
       get: function get() {
         // 这里可以设置watcher ，每个属性都有对应自己的watcher
         if (Dep.target) {
-          // 如果当前有watcher dep可能对应多个watcher？
+          // 如果当前有watcher
           dep.depend();
+
+          if (childObj && childObj.dep) {
+            childObj.dep.depend(); // 收集了数组的依赖
+
+            if (Array.isArray(value)) {
+              // 如果数组中还有数组
+              dependArray(value);
+            }
+          }
         }
 
-        console.log('取值 get');
         return value;
       },
       set: function set(newVal) {
@@ -318,10 +332,21 @@
 
         observe(newVal);
         value = newVal;
-        console.log('设值 set');
         dep.notify(); // 通知依赖的watcher进行更新
       }
     });
+  }
+
+  function dependArray(value) {
+    // 数组中的数组依赖
+    for (var i = 0; i < value.length; i++) {
+      var current = value[i];
+      current.__ob__ && current.__ob__.dep.depend();
+
+      if (Array.isArray(current)) {
+        dependArray(current);
+      }
+    }
   }
 
   function observe(data) {
@@ -666,8 +691,7 @@
 
   function patch(oldVnode, vnode) {
     // 第一次oldVnode 是标签
-    console.log(oldVnode, vnode); // 1 判断是更新还是渲染
-
+    // 1 判断是更新还是渲染
     var isRealElement = oldVnode.nodeType;
 
     if (isRealElement) {
@@ -728,7 +752,6 @@
   function lifecycleMixin(Vue) {
     Vue.prototype._update = function (vnode) {
       var vm = this;
-      console.log(vnode);
       vm.$el = patch(vm.$el, vnode); // 虚拟vnode创建真实dom 替换已有的$el
     };
   }
@@ -867,23 +890,22 @@
 
     Vue.mixin = function (mixin) {
       this.options = mergeOptions(this.options, mixin);
-    };
+    }; //Vue.mixin({
+    //    a: 1,
+    //    b: 2,
+    //    beforeCreate: function () {
+    //        console.log('fn1')
+    //    }
+    //})
+    //Vue.mixin({
+    //    b: 3,
+    //    c: 4,
+    //    beforeCreate: function () {
+    //        console.log('fn2')
+    //    }
+    //})
+    //console.log(Vue.options);
 
-    Vue.mixin({
-      a: 1,
-      b: 2,
-      beforeCreate: function beforeCreate() {
-        console.log('fn1');
-      }
-    });
-    Vue.mixin({
-      b: 3,
-      c: 4,
-      beforeCreate: function beforeCreate() {
-        console.log('fn2');
-      }
-    });
-    console.log(Vue.options);
   }
 
   function Vue(options) {

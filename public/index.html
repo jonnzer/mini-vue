@@ -11,7 +11,7 @@
 <body>
     <div id="app" class="divclass" style="color: pink;font-size: 28px;">
         hello
-        <p class="abc">{{name}}</p>
+        <p class="abc">{{testArr}}</p>
         <p ssss="111">{{age}}</p>
     </div>
     <script src="/dist/umd/vue.js"></script>
@@ -27,12 +27,7 @@
                         Number: 23
                     },
                     testArr: [
-                        {
-                            a: 1,
-                        },
-                        {
-                            b: 2
-                        }
+                        [1], [2]
                     ]
                 }
             },
@@ -52,8 +47,8 @@
             //}
         })
         setTimeout(() => {
-            vm.name = '王泽中是帅哥'
-        })
+            vm.testArr[0].push(4)
+        }, 1000)
     </script>
 </body>
 

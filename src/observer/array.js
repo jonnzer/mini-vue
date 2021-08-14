@@ -34,6 +34,7 @@ methods.forEach(method => {
                 break;
         }
         if (inserted) ob.observerArray(inserted) // 观察新插入的对象
+        ob.dep.notify() // 数组dep更新
         return result
     }
 })
