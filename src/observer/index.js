@@ -38,7 +38,7 @@ class Observer {
 
 }
 
-function defineReactive(data, key, value) {
+function defineReactive(data, key, value) { // 定义响应式数据 让对象的数据添加getter和setter 并在期间设置了观察者
     let dep = new Dep()
     observe(value)
     Object.defineProperty(data, key, {
@@ -46,9 +46,10 @@ function defineReactive(data, key, value) {
         enumerable: true,
         get() {
             // 这里可以设置watcher ，每个属性都有对应自己的watcher
-            if (Dep.target) { // 如果当前有watcher
+            if (Dep.target) { // 如果当前有watcher dep可能对应多个watcher？
                 dep.depend()
             }
+            console.log('取值 get');
             return value
         },
         set(newVal) {
@@ -56,6 +57,7 @@ function defineReactive(data, key, value) {
             // 如果用户手动设置更新了data的对象，那么也要给新对象上的数据进行数据劫持
             observe(newVal)
             value = newVal
+            console.log('设值 set');
             dep.notify() // 通知依赖的watcher进行更新
         }
     })

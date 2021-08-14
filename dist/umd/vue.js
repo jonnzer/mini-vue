@@ -204,6 +204,7 @@
   var id$1 = 0;
 
   var Dep = /*#__PURE__*/function () {
+    // depend和notify方法用到了观察者模式
     function Dep() {
       _classCallCheck(this, Dep);
 
@@ -214,8 +215,8 @@
     _createClass(Dep, [{
       key: "depend",
       value: function depend() {
-        this.subs.push(Dep.target);
-        console.log(this.subs);
+        // 添加watcher和dep的互相记忆关系
+        Dep.target.addDep(this);
       }
     }, {
       key: "notify",
@@ -224,12 +225,18 @@
           watcher.update();
         });
       }
+    }, {
+      key: "addSub",
+      value: function addSub(watcher) {
+        //  dep 关联 watcher
+        this.subs.push(watcher);
+      }
     }]);
 
     return Dep;
   }();
 
-  var stack$1 = []; // 保留和移除watcher
+  var stack$1 = []; // 是用来存放dep.target 保留和移除watcher
 
   function pushTarget(watcher) {
     Dep.target = watcher;
@@ -287,6 +294,7 @@
   }();
 
   function defineReactive(data, key, value) {
+    // 定义响应式数据 让对象的数据添加getter和setter 并在期间设置了观察者
     var dep = new Dep();
     observe(value);
     Object.defineProperty(data, key, {
@@ -295,10 +303,11 @@
       get: function get() {
         // 这里可以设置watcher ，每个属性都有对应自己的watcher
         if (Dep.target) {
-          // 如果当前有watcher
+          // 如果当前有watcher dep可能对应多个watcher？
           dep.depend();
         }
 
+        console.log('取值 get');
         return value;
       },
       set: function set(newVal) {
@@ -309,6 +318,7 @@
 
         observe(newVal);
         value = newVal;
+        console.log('设值 set');
         dep.notify(); // 通知依赖的watcher进行更新
       }
     });
@@ -612,8 +622,12 @@
       this.vm = vm;
       this.callback = callback;
       this.options = options;
-      this.id = id++;
+      this.id = id++; // 保持watcher的唯一性
+
       this.getter = exprOrFn;
+      this.depsId = new Set();
+      this.deps = []; // 存放唯一的dep
+
       this.get();
     }
 
@@ -630,7 +644,20 @@
     }, {
       key: "update",
       value: function update() {
+        // watcher的update方法，在dep的观察者更新时候会调用
         this.get();
+      }
+    }, {
+      key: "addDep",
+      value: function addDep(dep) {
+        // watcher关联dep dep里不能放重复的watcher watcher里不能发重复的dep
+        var id = dep.id; // set结构存储它 set结构可以去重
+
+        if (!this.depsId.has(id)) {
+          this.depsId.add(id);
+          this.deps.push(dep);
+          dep.addSub(this); // dep 关联 watcher
+        }
       }
     }]);
 

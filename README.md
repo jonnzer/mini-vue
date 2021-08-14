@@ -17,8 +17,11 @@
 + Node.insertBefore() 方法在参考节点之前插入一个拥有指定父节点的子节点 eg: var insertedNode = parentNode.insertBefore(newNode, referenceNode);
 
 ### 大知识点：
++ watcher来源：
+    - 数据更新时候，期望可以自动更新视图。所以要在数据更新的时候设置watcher，动态去捕获更新，执行渲染。
 + watcher交互：
-- 先存放Dep.target,在set值时通知所有依赖该值的属性更新
+    - 先存放Dep.target,在set值时通知所有依赖该值的属性更新
+    - watcher和dep的关系是多对多
 
 ### 代码写法
 + 初始化的功能，也会把用到的传入对象信息和初始化状态 等等方法都分成一个一个小函数。（分治的思想）

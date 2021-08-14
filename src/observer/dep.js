@@ -1,23 +1,24 @@
 let id = 0
-class Dep {
+class Dep { // depend和notify方法用到了观察者模式
     constructor() {
         this.id = id++
         this.subs = []
     }
     depend() {
-        this.subs.push(Dep.target)
-        console.log(this.subs);
+        // 添加watcher和dep的互相记忆关系
+        Dep.target.addDep(this)
     }
     notify() {
         this.subs.forEach((watcher) => {
             watcher.update()
         })
     }
+    addSub(watcher) { //  dep 关联 watcher
+        this.subs.push(watcher)
+    }
 }
 
-let stack = []
-
-// 保留和移除watcher
+let stack = [] // 是用来存放dep.target 保留和移除watcher
 
 export function pushTarget(watcher) {
     Dep.target = watcher

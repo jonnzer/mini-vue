@@ -6,8 +6,10 @@ class Watcher {
         this.vm = vm
         this.callback = callback
         this.options = options
-        this.id = id++
+        this.id = id++          // 保持watcher的唯一性
         this.getter = exprOrFn
+        this.depsId = new Set()
+        this.deps = [] // 存放唯一的dep
         this.get()
     }
     get() {
@@ -16,8 +18,16 @@ class Watcher {
         this.getter() // 执行 exprOrFn
         popTarget() // 移除全局watcher Dep.target
     }
-    update() {
+    update() { // watcher的update方法，在dep的观察者更新时候会调用
         this.get()
+    }
+    addDep(dep) { // watcher关联dep dep里不能放重复的watcher watcher里不能发重复的dep
+        let id = dep.id // set结构存储它 set结构可以去重
+        if (!this.depsId.has(id)) {
+            this.depsId.add(id)
+            this.deps.push(dep)
+            dep.addSub(this) // dep 关联 watcher
+        }
     }
 }
 
