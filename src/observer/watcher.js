@@ -1,4 +1,5 @@
 import { pushTarget, popTarget } from './dep'
+import { queueWatcher } from './schedular'
 
 let id = 0
 class Watcher {
@@ -19,6 +20,13 @@ class Watcher {
         popTarget() // 移除全局watcher Dep.target
     }
     update() { // watcher的update方法，在dep的观察者更新时候会调用
+        // 考虑一种情况：操作的都是同一个属性，建立的watcher是同一个watcher，watcher 的id是一样的，然后update好几次。
+        // 需要弄一个队列更新
+        //console.log(this.id);
+        queueWatcher(this)
+        //this.get()
+    }
+    run() {
         this.get()
     }
     addDep(dep) { // watcher关联dep dep里不能放重复的watcher watcher里不能发重复的dep
@@ -30,5 +38,6 @@ class Watcher {
         }
     }
 }
+
 
 export default Watcher

@@ -299,7 +299,6 @@
 
   function defineReactive(data, key, value) {
     // 定义响应式数据 让对象的数据添加getter和setter 并在期间设置了观察者
-    console.log(value);
     var dep = new Dep();
     var childObj = observe(value); // value可能是数组，也可能是对象
 
@@ -637,6 +636,59 @@
     return renderFn;
   }
 
+  var callbackArr = []; // nextTick原理 把用户的操作放到异步进程的最后执行，就可保证一定是最新的数据
+  // [flushSchedularQueue, userNextTick]
+
+  var waiting = false; // 多次调用nextTick，没有刷新队列的时候，先放到数组中，加入等待状态 刷新后再盖比那等待状态
+
+  function flushCallBack() {
+    callbackArr.forEach(function (cb) {
+      return cb();
+    });
+    waiting = false;
+  }
+
+  function nextTick(cb) {
+    callbackArr.push(cb);
+
+    if (waiting === false) {
+      setTimeout(flushCallBack, 0);
+      waiting = true;
+    }
+  }
+
+  var queue = [];
+  var has = {};
+  /*
+      解决场景：
+      vm.testArr.push(1)
+      vm.testArr.push(2)
+      vm.testArr.push(3)
+      vm.testArr.push(4)
+      update四次，其实应该是同一个watcher，只update一次就够了
+  */
+
+  function flushSchedularQueue() {
+    queue.forEach(function (watcher) {
+      return watcher.run();
+    });
+    queue = [];
+    has = {};
+  }
+
+  function queueWatcher(watcher) {
+    // 队列更新
+    var id = watcher.id;
+
+    if (!has[id]) {
+      queue.push(watcher);
+      has[id] = true; // Vue.nextTick 
+      // promise / mutationObserver / setImmediate / setTimeout
+
+      nextTick(flushSchedularQueue);
+    }
+  }
+
   var id = 0;
 
   var Watcher = /*#__PURE__*/function () {
@@ -670,6 +722,14 @@
       key: "update",
       value: function update() {
         // watcher的update方法，在dep的观察者更新时候会调用
+        // 考虑一种情况：操作的都是同一个属性，建立的watcher是同一个watcher，watcher 的id是一样的，然后update好几次。
+        // 需要弄一个队列更新
+        //console.log(this.id);
+        queueWatcher(this); //this.get()
+      }
+    }, {
+      key: "run",
+      value: function run() {
         this.get();
       }
     }, {
@@ -766,6 +826,8 @@
       // vm._render 通过解析的render方法，渲染出虚拟dom _c _v _s
       // vm._update 通过虚拟dom 创建真实的dom
       // 渲染页面
+      console.log('update');
+
       vm._update(vm._render()); // 执行顺序是先里后外
 
     }; // 渲染watcher 每个组件都有一个watcher vm.$watch(() => {} )   空函数是watch后的回调处理
@@ -822,6 +884,8 @@
 
       mountComponent(vm, el);
     };
+
+    Vue.prototype.$nextTick = nextTick;
   }
 
   function createElement(tag) {

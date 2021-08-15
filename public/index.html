@@ -27,7 +27,7 @@
                         Number: 23
                     },
                     testArr: [
-                        [1], [2]
+                        0.5
                     ]
                 }
             },
@@ -46,9 +46,14 @@
             //    console.log('el 后', this.$el)
             //}
         })
-        setTimeout(() => {
-            vm.testArr[0].push(4)
-        }, 1000)
+        vm.testArr.push(1)
+        vm.testArr.push(2)
+        vm.testArr.push(3)
+        vm.testArr.push(4)
+        console.log(vm.$el.innerHTML)
+        vm.$nextTick(() => {
+            console.log(vm.$el.innerHTML)
+        })
     </script>
 </body>
 

@@ -27,6 +27,7 @@ export function mountComponent(vm, el) {
         // vm._update 通过虚拟dom 创建真实的dom
 
         // 渲染页面
+        console.log('update');
         vm._update(vm._render()) // 执行顺序是先里后外
 
     }

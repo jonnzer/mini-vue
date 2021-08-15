@@ -41,7 +41,6 @@ class Observer {
 }
 
 function defineReactive(data, key, value) { // 定义响应式数据 让对象的数据添加getter和setter 并在期间设置了观察者
-    console.log(value);
     let dep = new Dep()
     let childObj = observe(value) // value可能是数组，也可能是对象
     Object.defineProperty(data, key, {
