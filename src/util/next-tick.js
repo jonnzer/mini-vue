@@ -10,7 +10,7 @@ function flushCallBack() {
 }
 
 // eslint-disable-next-line no-undef
-export default nextTick = (cb) => {
+export function nextTick(cb) {
   callbackArr.push(cb)
   if (waiting === false) {
     setTimeout(flushCallBack, 0)

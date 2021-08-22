@@ -129,9 +129,9 @@
     if (newVal) {
       if (oldVal) {
         return oldVal.concat(newVal);
-      } else {
-        return [newVal];
       }
+
+      return [newVal];
     }
   } // 默认的合并规则 特殊属性有其他合并方式
 
@@ -271,8 +271,8 @@
       } else {
         this.walk(value);
       }
-    } //为什么不在class里继续定义defineReactive 而是新开了一个functio  @question
-    //defineReactive(data) {}
+    } // 为什么不在class里继续定义defineReactive 而是新开了一个functio  @question
+    // defineReactive(data) {}
 
 
     _createClass(Observer, [{
@@ -392,13 +392,13 @@
   // </div>
   // 此文件的作用是将template的html字符串转成AST结构
   // 需要的正则
-  var ncname = "[a-zA-Z_][\\-\\.0-9_a-zA-Z]*"; // abc-aaa
+  var ncname = '[a-zA-Z_][\\-\\.0-9_a-zA-Z]*'; // abc-aaa
 
   var qnameCapture = "((?:".concat(ncname, "\\:)?").concat(ncname, ")"); // <aa:bb>
 
   var startTagOpen = new RegExp("^<".concat(qnameCapture)); // 标签开头的正则 <sss 捕获的内容是标签名
 
-  var startTagClose = /^\s*(\/?)>/; // 匹配标签结束的 >  <div>   
+  var startTagClose = /^\s*(\/?)>/; // 匹配标签结束的 >  <div>
 
   var endTag = new RegExp("^<\\/".concat(qnameCapture, "[^>]*>")); // 匹配标签结尾的 </div>
 
@@ -410,9 +410,9 @@
 
   var stack = []; // 标签字符串数组
 
-  var ELEMENT_TYPE = 1; // 
+  var ELEMENT_TYPE = 1; //
 
-  var TEXT_TYPE = 3; // 
+  var TEXT_TYPE = 3; //
 
   function createASTElement(tagName, attrs) {
     return {
@@ -451,7 +451,7 @@
 
   function end(tagName) {
     // 标签闭合 tagName
-    //console.log(
+    // console.log(
     var element = stack.pop(); // 拿到栈中的最后一个元素
 
     currentParent = stack[stack.length - 1]; // 取栈中的最后一个元素 的父级元素
@@ -460,7 +460,7 @@
       element.parent = currentParent;
       currentParent.children.push(element);
     }
-  } //advance(***[0].length) 是regExp.match匹配返回第一个参数 
+  } // advance(***[0].length) 是regExp.match匹配返回第一个参数
 
 
   function parserHTML(html) {
@@ -478,7 +478,9 @@
           attrs: []
         };
 
-        var _end, attr;
+        var _end;
+
+        var attr;
 
         while (!(_end = html.match(startTagClose)) && (attr = html.match(attribute))) {
           // 如果剩下的匹配不到结束标签，则视为有属性，处理属性值的返回
@@ -541,7 +543,7 @@
     return root;
   }
 
-  var defaultTagRE = /\{\{((?:.|\r?\n)+?)\}\}/g; // {{ddd}} 
+  var defaultTagRE = /\{\{((?:.|\r?\n)+?)\}\}/g; // {{ddd}}
 
   function generate(el) {
     // el 是AST语法树
@@ -559,45 +561,46 @@
       return "".concat(children.map(function (c) {
         return gen(c);
       }).join(','));
-    } else {
-      return false;
     }
+
+    return false;
   }
 
   function gen(node) {
     // node type 1 3 区别是元素节点还是文本节点 递归思想
     if (node.type === 1) {
       return generate(node);
-    } else {
-      var text = node.text; // 到这一步仍需处理text 可能存在{{}}语法
-      // a {{name}} b {{age}} c 
-      // 转化成
-      // _v("a" + _S(name) + "b" + _s(age) + "c")
-      // 正则存在lastIndex的问题，需重置为0 ？？？
-      // 正则 exec 0: "{{name}}" 1: "name" index匹配文本的第一个字符的位置
-
-      var tokens = []; // 待拼接的字符串数组
-
-      var match, index;
-      var lastIndex = defaultTagRE.lastIndex = 0;
-
-      while (match = defaultTagRE.exec(text)) {
-        index = match.index;
-
-        if (index > lastIndex) {
-          tokens.push(JSON.stringify(text.slice(lastIndex, index)));
-        }
-
-        tokens.push("_s(".concat(match[1].trim(), ")"));
-        lastIndex = index + match[0].length;
-      }
-
-      if (lastIndex < text.length) {
-        tokens.push(JSON.stringify(text.slice(lastIndex)));
-      }
-
-      return "_v(".concat(tokens.join('+'), ")");
     }
+
+    var text = node.text; // 到这一步仍需处理text 可能存在{{}}语法
+    // a {{name}} b {{age}} c
+    // 转化成
+    // _v("a" + _S(name) + "b" + _s(age) + "c")
+    // 正则存在lastIndex的问题，需重置为0 ？？？
+    // 正则 exec 0: "{{name}}" 1: "name" index匹配文本的第一个字符的位置
+
+    var tokens = []; // 待拼接的字符串数组
+
+    var match;
+    var index;
+    var lastIndex = defaultTagRE.lastIndex = 0;
+
+    while (match = defaultTagRE.exec(text)) {
+      index = match.index;
+
+      if (index > lastIndex) {
+        tokens.push(JSON.stringify(text.slice(lastIndex, index)));
+      }
+
+      tokens.push("_s(".concat(match[1].trim(), ")"));
+      lastIndex = index + match[0].length;
+    }
+
+    if (lastIndex < text.length) {
+      tokens.push(JSON.stringify(text.slice(lastIndex)));
+    }
+
+    return "_v(".concat(tokens.join('+'), ")");
   }
 
   function genProps(attrs) {
@@ -616,7 +619,7 @@
       } else {
         str += "".concat(item.name, ":").concat(JSON.stringify(item.value), ",");
       }
-    }); //return `{${str.substring(0, str.length - 1)}}`
+    }); // return `{${str.substring(0, str.length - 1)}}`
 
     return "{".concat(str.slice(0, -1), "}");
   }
@@ -646,7 +649,8 @@
       return cb();
     });
     waiting = false;
-  }
+  } // eslint-disable-next-line no-undef
+
 
   function nextTick(cb) {
     callbackArr.push(cb);
@@ -682,7 +686,7 @@
 
     if (!has[id]) {
       queue.push(watcher);
-      has[id] = true; // Vue.nextTick 
+      has[id] = true; // Vue.nextTick
       // promise / mutationObserver / setImmediate / setTimeout
 
       nextTick(flushSchedularQueue);
@@ -698,7 +702,8 @@
       // 所有属性都放在实例上
       this.vm = vm;
       this.callback = callback;
-      this.options = options;
+      this.options = options; // eslint-disable-next-line no-plusplus
+
       this.id = id++; // 保持watcher的唯一性
 
       this.getter = exprOrFn;
@@ -724,8 +729,8 @@
         // watcher的update方法，在dep的观察者更新时候会调用
         // 考虑一种情况：操作的都是同一个属性，建立的watcher是同一个watcher，watcher 的id是一样的，然后update好几次。
         // 需要弄一个队列更新
-        //console.log(this.id);
-        queueWatcher(this); //this.get()
+        // console.log(this.id);
+        queueWatcher(this); // this.get()
       }
     }, {
       key: "run",
@@ -954,21 +959,21 @@
 
     Vue.mixin = function (mixin) {
       this.options = mergeOptions(this.options, mixin);
-    }; //Vue.mixin({
+    }; // Vue.mixin({
     //    a: 1,
     //    b: 2,
     //    beforeCreate: function () {
     //        console.log('fn1')
     //    }
-    //})
-    //Vue.mixin({
+    // })
+    // Vue.mixin({
     //    b: 3,
     //    c: 4,
     //    beforeCreate: function () {
     //        console.log('fn2')
     //    }
-    //})
-    //console.log(Vue.options);
+    // })
+    // console.log(Vue.options);
 
   }
 

@@ -12,18 +12,18 @@ let has = {}
 */
 
 function flushSchedularQueue() {
-    queue.forEach(watcher => watcher.run())
-    queue = []
-    has = {}
+  queue.forEach((watcher) => watcher.run())
+  queue = []
+  has = {}
 }
 
 export function queueWatcher(watcher) { // 队列更新
-    const id = watcher.id
-    if (!has[id]) {
-        queue.push(watcher)
-        has[id] = true
-        // Vue.nextTick 
-        // promise / mutationObserver / setImmediate / setTimeout
-        nextTick(flushSchedularQueue)
-    }
+  const { id } = watcher
+  if (!has[id]) {
+    queue.push(watcher)
+    has[id] = true
+    // Vue.nextTick
+    // promise / mutationObserver / setImmediate / setTimeout
+    nextTick(flushSchedularQueue)
+  }
 }
