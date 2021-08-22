@@ -13,6 +13,10 @@
     "@babel/core": "^7.14.6",
     "@babel/preset-env": "^7.14.7",
     "cross-env": "^7.0.3",
+    "eslint": "^7.32.0",
+    "eslint-config-airbnb": "^18.2.1",
+    "eslint-plugin-import": "^2.24.1",
+    "global": "^4.4.0",
     "rollup": "^2.53.2",
     "rollup-plugin-babel": "^4.4.0",
     "rollup-plugin-serve": "^1.1.0"
