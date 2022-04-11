@@ -3,7 +3,7 @@
 
 const oldArrayPrototye = Array.prototype
 
-export const arrayMethods = Object.create(oldArrayPrototye)
+export const arrayMethods = Object.create(oldArrayPrototye) // 自定义的数组方法 继承 数组API
 
 const methods = [
   'push',
@@ -23,10 +23,10 @@ methods.forEach((method) => {
     let inserted // 用户插入的元素
     switch (method) {
       case 'push':
-      case 'splice':
+      case 'unshift':
         inserted = args
         break
-      case 'splice': // 删除 修改 新增 arr.splice(0,1, {name: 1})
+      case 'splice': // 删除 修改 新增 arr.splice(0,1, {name: 1}) // 获取 {name: 1}
         inserted = args.slice(2)
         break
       default:

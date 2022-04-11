@@ -25,21 +25,24 @@ class Observer {
 
   // 为什么不在class里继续定义defineReactive 而是新开了一个functio  @question
   // defineReactive(data) {}
-  walk(data) { // 递归 Object.defineProperty 添加get set
+  walk(data) {
+    // 递归 Object.defineProperty 添加get set
     const keys = Object.keys(data)
     keys.forEach((key) => {
       defineReactive(data, key, data[key])
     })
   }
 
-  observerArray(value) { // 观察数组
+  observerArray(value) {
+    // 观察数组
     value.forEach((item) => {
       observe(item)
     })
   }
 }
 
-function defineReactive(data, key, value) { // 定义响应式数据 让对象的数据添加getter和setter 并在期间设置了观察者
+function defineReactive(data, key, value) {
+  // 定义响应式数据 让对象的数据添加getter和setter 并在期间设置了观察者
   const dep = new Dep()
   const childObj = observe(value) // value可能是数组，也可能是对象
   Object.defineProperty(data, key, {
@@ -47,19 +50,26 @@ function defineReactive(data, key, value) { // 定义响应式数据 让对象�
     enumerable: true,
     get() {
       // 这里可以设置watcher ，每个属性都有对应自己的watcher
-      if (Dep.target) { // 如果当前有watcher
+      if (Dep.target) {
+        console.log(Dep.target)
+        // 如果当前有watcher
         dep.depend()
         if (childObj && childObj.dep) {
+          console.log('childObj.dep')
           childObj.dep.depend() // 收集了数组的依赖
-          if (Array.isArray(value)) { // 如果数组中还有数组
+          if (Array.isArray(value)) {
+            // 如果数组中还有数组
             dependArray(value)
           }
         }
+        // console.log('dep.subs: ', dep.subs)
       }
       return value
     },
     set(newVal) {
-      if (newVal === value) { return }
+      if (newVal === value) {
+        return
+      }
       // 如果用户手动设置更新了data的对象，那么也要给新对象上的数据进行数据劫持
       observe(newVal)
       value = newVal
@@ -68,7 +78,9 @@ function defineReactive(data, key, value) { // 定义响应式数据 让对象�
   })
 }
 
-function dependArray(value) { // 数组中的数组依赖
+function dependArray(value) {
+  console.log('dependArray')
+  // 数组中的数组依赖
   for (let i = 0; i < value.length; i++) {
     const current = value[i]
     current.__ob__ && current.__ob__.dep.depend()

@@ -1,4 +1,4 @@
-import { pushTarget, popTarget } from './dep'
+import Dep, { pushTarget, popTarget } from './dep'
 import { queueWatcher } from './schedular'
 
 let id = 0

@@ -169,7 +169,8 @@
   // 重新数组的常用API
   // push shfit unshift pop reverse sort splice 会导致数组本身产生变化的API都要处理
   var oldArrayPrototye = Array.prototype;
-  var arrayMethods = Object.create(oldArrayPrototye);
+  var arrayMethods = Object.create(oldArrayPrototye); // 自定义的数组方法 继承 数组API
+
   var methods = ['push', 'shift', 'unshift', 'pop', 'reverse', 'sort', 'splice'];
   methods.forEach(function (method) {
     arrayMethods[method] = function () {
@@ -185,12 +186,12 @@
 
       switch (method) {
         case 'push':
-        case 'splice':
+        case 'unshift':
           inserted = args;
           break;
 
         case 'splice':
-          // 删除 修改 新增 arr.splice(0,1, {name: 1})
+          // 删除 修改 新增 arr.splice(0,1, {name: 1}) // 获取 {name: 1}
           inserted = args.slice(2);
           break;
       }
@@ -217,7 +218,8 @@
     _createClass(Dep, [{
       key: "depend",
       value: function depend() {
-        // 添加watcher和dep的互相记忆关系
+        // 添加Dep.target和dep的互相记忆关系
+        console.log('depend触发', this);
         Dep.target.addDep(this);
       }
     }, {
@@ -246,7 +248,7 @@
   }
   function popTarget() {
     stack$1.pop();
-    Dep.target = stack$1[stack$1.length - 1];
+    Dep.target = stack$1[stack$1.length - 1]; // Dep.target的值会变成undefined
   }
 
   // 当值是数组的时候，索引也会作为key去监听 get 0() get 1()这样是无意义的操作，也会拖慢性能
@@ -308,17 +310,20 @@
       get: function get() {
         // 这里可以设置watcher ，每个属性都有对应自己的watcher
         if (Dep.target) {
-          // 如果当前有watcher
+          console.log(Dep.target); // 如果当前有watcher
+
           dep.depend();
 
           if (childObj && childObj.dep) {
+            console.log('childObj.dep');
             childObj.dep.depend(); // 收集了数组的依赖
 
             if (Array.isArray(value)) {
               // 如果数组中还有数组
               dependArray(value);
             }
-          }
+          } // console.log('dep.subs: ', dep.subs)
+
         }
 
         return value;
@@ -337,7 +342,8 @@
   }
 
   function dependArray(value) {
-    // 数组中的数组依赖
+    console.log('dependArray'); // 数组中的数组依赖
+
     for (var i = 0; i < value.length; i++) {
       var current = value[i];
       current.__ob__ && current.__ob__.dep.depend();
@@ -831,8 +837,6 @@
       // vm._render 通过解析的render方法，渲染出虚拟dom _c _v _s
       // vm._update 通过虚拟dom 创建真实的dom
       // 渲染页面
-      console.log('update');
-
       vm._update(vm._render()); // 执行顺序是先里后外
 
     }; // 渲染watcher 每个组件都有一个watcher vm.$watch(() => {} )   空函数是watch后的回调处理

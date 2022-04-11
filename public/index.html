@@ -11,8 +11,7 @@
 <body>
     <div id="app" class="divclass" style="color: pink;font-size: 28px;">
         hello
-        <p class="abc">{{testArr}}</p>
-        <p ssss="111">{{age}}</p>
+        <p class="abc">{{testObj}}</p>
     </div>
     <script src="/dist/umd/vue.js"></script>
     <script>
@@ -20,15 +19,18 @@
             el: '#app',
             data() {
                 return {
-                    name: '王泽中是帅比',
-                    age: 28,
+                    name: 'welcome to test demoVue',
+                    age: 29,
                     address: {
                         name: 'd***l',
                         Number: 23
                     },
                     testArr: [
                         0.5
-                    ]
+                    ],
+                    testObj : {
+                        
+                    }
                 }
             },
             // 测试生命周期代码如下
@@ -46,14 +48,13 @@
             //    console.log('el 后', this.$el)
             //}
         })
-        vm.testArr.push(1)
-        vm.testArr.push(2)
-        vm.testArr.push(3)
-        vm.testArr.push(4)
-        console.log(vm.$el.innerHTML)
-        vm.$nextTick(() => {
-            console.log(vm.$el.innerHTML)
-        })
+        // vm.testArr.push(1)
+        // vm.testArr.push(2)
+        // vm.testArr.push(3)
+        // vm.testArr.splice(1,1, {'a': 1})
+        // vm.$nextTick(() => {
+        //     console.log(vm.$el.innerHTML)
+        // })
     </script>
 </body>
 

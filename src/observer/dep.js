@@ -6,7 +6,8 @@ class Dep { // depend和notify方法用到了观察者模式
   }
 
   depend() {
-    // 添加watcher和dep的互相记忆关系
+    // 添加Dep.target和dep的互相记忆关系
+    console.log('depend触发', this)
     Dep.target.addDep(this)
   }
 
@@ -30,7 +31,7 @@ export function pushTarget(watcher) {
 
 export function popTarget() {
   stack.pop()
-  Dep.target = stack[stack.length - 1]
+  Dep.target = stack[stack.length - 1] // Dep.target的值会变成undefined
 }
 
 export default Dep
