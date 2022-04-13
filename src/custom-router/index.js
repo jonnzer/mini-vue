@@ -1,52 +1,77 @@
- /* eslint-disable */
-let vue
+import install from './install'
+import createMatcher from './create-matcher'
+import BrowserHistory from './history/browserHistory'
+import HashHistory from './history/hashHistory'
+
 class customRouter {
+    /**
+     * 
+     * @param {*} options 用户传入 router配置：new VueRouter的参数
+     */
     constructor(options) {
         this.$options = options
-        this.$routeMap = {} // 从vue options拿到routes数组，绑定在实例上
-        // this.currentRoute = '/'
-        vue.util.defineReactive(this, 'currentRoute', '/') // vue的工具，用来设置响应式，是因为组件调用时，会触发响应式，重新渲染组件
-        window.addEventListener('hashchange', this.getCurrentRoute.bind(this))
-        window.addEventListener('load', this.getCurrentRoute.bind(this))
-        this.$options.routes.forEach(item => { // 这里的options仅仅是路由配置表
-            this.$routeMap[item.path] = item.component
+        this.mode = options.mode || 'hash'
+        let routes = options.routes || []
+        this.history = null  // 存储实例化 HashRouter 或 HistoryRouter
+        this.beforeHooks = [] // 存放钩子
+
+        // 创建router匹配结构
+        // (1) url => component render
+        // (2) 增加 url 或者删除 url ：addRoutes 权限
+        this.$matcher = createMatcher(routes)
+        
+        switch (this.mode) {
+            case 'hash':
+                this.history = new HashHistory(this)
+                break;
+            case 'history':
+                this.history = new BrowserHistory(this)
+                break
+            default:
+                break;
+        }
+    }
+
+    /**
+     * @feature 方便调用 createMatcher 方法返回的match方法
+     * @param {*} location 路由字符串
+     */
+    match (location) {
+        return this.$matcher.match(location)
+    }
+
+    init (app) { // 根据路由mode做匹配监听
+        // console.log('init app ', app) // app 为注册了router的vue根实例
+        const history = this.history
+        const setupListener = () => { // 用函数包裹是为了待会调用方便
+            history.setupListener()
+        }
+        history.transitionTo(history.getCurrentRoute(), setupListener)
+
+        // 回调: listen内的都是回调函数，每次有新的路由匹配值，都会执行该回调函数，更新了vue根实例上的_route属性
+        history.listen((route) => {
+            app._route = route
         })
     }
-    getCurrentRoute() {
-        this.currentRoute = location.hash.slice(1)
+    /**
+     * 跳转API
+     * @param {*} location router-link to属性值 字符串
+     */
+    push(location) {
+       this.history.push(location)
+    }
+
+    // 钩子
+    /**
+     * 
+     * @param {*} fn 
+     */
+    beforeEach(fn) {
+        this.beforeHooks.push(fn)
     }
 
 }
 
-
-customRouter.install = function (_vue) {
-    vue = _vue
-    vue.mixin({
-        beforeCreate() {
-            if (this.$options?.router) { // 已经把custom-router类 挂载到vue实例了
-                vue.prototype.$router = this.$options.router // 这一步作用是将当前custom-router的挂在到vue原型上
-            }
-        }
-    })
-    vue.component('router-link', {
-        props: ['to'],
-        render(h) {
-            // 参数1 标签
-            // 参数2 属性
-            // 参数3 子级
-            return h('a', { attrs: { href: '#' + this.to }, class: 'router-link' }, this.$slots.default)
-        }
-    })
-    // console.log('component: ', component)
-    vue.component('router-view', {
-        render(h) {
-            console.log('vue $router: ', this)
-            let { $routeMap, currentRoute } = this.$router // 已经可以用vue原型上来操作了
-            let component = $routeMap[currentRoute] ?? null
-            // get component
-            return h(component)
-        }
-    })
-}
+customRouter.install = install
 
 export default customRouter
